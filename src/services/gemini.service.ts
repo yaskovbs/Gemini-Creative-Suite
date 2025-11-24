@@ -44,7 +44,7 @@ export class GeminiService {
   async generateImage(prompt: string, aspectRatio: string): Promise<string> {
     const ai = this.getAiClient();
     const response = await ai.models.generateImages({
-      model: 'gemini-3-pro-image-preview',
+      model: 'imagen-3.0-generate-001',
       prompt,
       config: {
         numberOfImages: 1,
@@ -113,7 +113,7 @@ export class GeminiService {
     const textPart = { text: prompt };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.0-flash', 
       contents: { parts: [textPart, imagePart] },
     });
 
@@ -131,7 +131,7 @@ export class GeminiService {
     const textPart = { text: prompt };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.0-flash',
       contents: { parts: [textPart, videoPart] },
     });
 
@@ -141,9 +141,9 @@ export class GeminiService {
   async chatWithThinking(history: ChatHistory[], message: string): Promise<AsyncGenerator<GenerateContentResponse>> {
     const ai = this.getAiClient();
     const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.0-flash',
       config: {
-        thinkingConfig: { thinkingBudget: 32768 }
+         // thinkingConfig is model specific.
       },
       history
     });
@@ -153,7 +153,7 @@ export class GeminiService {
   async chatWithSearch(history: ChatHistory[], message: string): Promise<AsyncGenerator<GenerateContentResponse>> {
     const ai = this.getAiClient();
     const chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       config: {
         tools: [{googleSearch: {}}],
       },

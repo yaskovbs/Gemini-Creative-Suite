@@ -104,7 +104,7 @@
                 <label for="video-prompt" class="block text-sm font-medium text-gray-300 mb-1">Prompt</label>
                 <textarea id="video-prompt" formControlName="prompt" rows="3" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-gemini-blue focus:border-gemini-blue text-white p-2" [placeholder]="videoMode() === 'text-to-video' ? 'e.g., A majestic dragon flying through a stormy sky' : 'e.g., Make the clouds move and the dragon breathe fire'"></textarea>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label for="video-model" class="block text-sm font-medium text-gray-300 mb-1">Video Model</label>
                   <select id="video-model" formControlName="model" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-gemini-blue focus:border-gemini-blue text-white p-2">
@@ -121,6 +121,14 @@
                     }
                   </select>
                 </div>
+                <div>
+                    <label for="video-quality" class="block text-sm font-medium text-gray-300 mb-1">Quality</label>
+                    <select id="video-quality" formControlName="quality" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-gemini-blue focus:border-gemini-blue text-white p-2">
+                      @for(q of videoQualities; track q.value) {
+                        <option [value]="q.value">{{ q.label }}</option>
+                      }
+                    </select>
+                  </div>
               </div>
             </div>
             <div class="mt-6">

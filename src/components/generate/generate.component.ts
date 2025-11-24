@@ -41,11 +41,14 @@ export class GenerateComponent {
   videoForm = this.fb.group({
     prompt: ['', Validators.required],
     aspectRatio: ['16:9' as VideoAspectRatio, Validators.required],
-    model: ['veo-3.1-fast-generate-preview', Validators.required],
+    model: ['veo-2.0-generate-001', Validators.required],
+    quality: ['medium', Validators.required],
     imageFile: [null]
   });
 
-  private supportedImageAspectRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '3:2', '21:9'];
+  // Imagen 3.0 supports these specific aspect ratios
+  private supportedImageAspectRatios = ['1:1', '3:4', '4:3', '9:16', '16:9'];
+  
   imageStyles = [
     { value: 'none', label: 'No specific style' },
     { value: 'photorealistic', label: 'Photorealistic' },
@@ -68,8 +71,14 @@ export class GenerateComponent {
     { value: '21:9', label: '21:9 (Cinematic)'},
   ];
   videoModels = [
+    { value: 'veo-2.0-generate-001', label: 'Veo 2.0 (Stable)'},
     { value: 'veo-3.1-fast-generate-preview', label: 'Veo 3.1 Fast (Faster generation)'},
     { value: 'veo-3.1-standard-generate-preview', label: 'Veo 3.1 Standard (Higher quality)'},
+  ];
+  videoQualities = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
   ];
 
   setMode(newMode: GenerationMode) {
@@ -211,7 +220,16 @@ export class GenerateComponent {
 
   private handleError(e: any) {
     console.error(e);
-    this.error.set(e.message || 'An unknown error occurred.');
+    let errorMessage = e.message || 'An unknown error occurred.';
+    
+    // Check for common API errors
+    if (errorMessage.includes('404')) {
+        errorMessage = 'Model not found (404). This usually means the selected model is not available for your API key or region. Try selecting a "Stable" model.';
+    } else if (errorMessage.includes('429')) {
+        errorMessage = 'Quota exceeded (429). Your API key has reached its usage limit. Please try again later or use a different key.';
+    }
+
+    this.error.set(errorMessage);
     this.status.set('error');
   }
 
@@ -223,6 +241,6 @@ export class GenerateComponent {
     this.uploadedFile.set(null);
     this.videoProgress.set(0);
     this.imageForm.reset({prompt: '', width: 1024, height: 1024, style: 'none'});
-    this.videoForm.reset({prompt: '', aspectRatio: '16:9', imageFile: null, model: 'veo-3.1-fast-generate-preview'});
+    this.videoForm.reset({prompt: '', aspectRatio: '16:9', imageFile: null, model: 'veo-2.0-generate-001', quality: 'medium'});
   }
 }
