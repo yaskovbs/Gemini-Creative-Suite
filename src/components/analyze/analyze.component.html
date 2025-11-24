@@ -1,0 +1,103 @@
+<div class="max-w-4xl mx-auto">
+  <div class="bg-gray-800 rounded-lg p-1 flex space-x-1 mb-6">
+    <button (click)="setMode('image')" class="w-full py-2.5 text-sm font-semibold rounded-md transition-colors" [class.bg-gemini-green]="mode() === 'image'" [class.text-white]="mode() === 'image'" [class.hover:bg-gray-700]="mode() !== 'image'">
+      Analyze Image
+    </button>
+    <button (click)="setMode('video')" class="w-full py-2.5 text-sm font-semibold rounded-md transition-colors" [class.bg-gemini-green]="mode() === 'video'" [class.text-white]="mode() === 'video'" [class.hover:bg-gray-700]="mode() !== 'video'">
+      Analyze Video
+    </button>
+  </div>
+
+  <div class="bg-gray-800/50 p-6 rounded-xl shadow-lg">
+    @if (mode() === 'image') {
+      <h2 class="text-2xl font-bold mb-4 text-gray-200">Image Analysis</h2>
+      <p class="text-gray-400 mb-6">Upload an image and ask Gemini anything about it. From identifying objects to understanding context.</p>
+    } @else {
+      <h2 class="text-2xl font-bold mb-4 text-gray-200">Video Analysis</h2>
+      <p class="text-gray-400 mb-6">Upload a short video clip and ask Gemini to describe scenes, track objects, or summarize the content.</p>
+    }
+
+    <form [formGroup]="analysisForm" (ngSubmit)="analyze()">
+      <div class="space-y-4">
+        <div>
+          <label [for]="'media-file-' + mode()" class="block text-sm font-medium text-gray-300 mb-1">
+            Upload {{ mode() === 'image' ? 'Image' : 'Video' }}
+          </label>
+          <input [id]="'media-file-' + mode()" (change)="onFileChange($event)" type="file" [accept]="mode() === 'image' ? 'image/*' : 'video/*'" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gemini-green file:text-white hover:file:bg-opacity-90" formControlName="mediaFile">
+        </div>
+
+        <div>
+            <label for="analysis-prompt" class="block text-sm font-medium text-gray-300 mb-1">Your Question</label>
+            <textarea id="analysis-prompt" formControlName="prompt" rows="3" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-gemini-green focus:border-gemini-green text-white p-2" [placeholder]="mode() === 'image' ? 'e.g., What breed is this dog?' : 'e.g., What happens in this clip?'"></textarea>
+        </div>
+      </div>
+       <div class="mt-6">
+          <button type="submit" [disabled]="status() === 'loading' || analysisForm.invalid" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gemini-green hover:bg-opacity-90 disabled:bg-gray-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gemini-green transition-all">
+            @if (status() === 'loading' && !uploadedFile()) {
+              <span class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Reading file...
+              </span>
+            } @else if (status() === 'loading' && uploadedFile()) {
+              <span class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Analyzing...
+              </span>
+            } @else {
+              <span>Analyze {{ mode() === 'image' ? 'Image' : 'Video' }}</span>
+            }
+          </button>
+        </div>
+    </form>
+  </div>
+
+  <div class="mt-8">
+     @if (status() === 'error' && error()) {
+      <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-xl" role="alert">
+        <strong class="font-bold">Info: </strong>
+        <span class="block sm:inline">{{ error() }}</span>
+      </div>
+    }
+
+    @if (status() === 'success' && result()) {
+      <div class="bg-gray-800/50 p-6 rounded-xl">
+        <h3 class="text-xl font-bold mb-4 text-gray-200">Analysis Result</h3>
+        <div class="prose prose-invert prose-p:text-gray-300 prose-strong:text-white prose-headings:text-gray-200 text-gray-300">
+           {{ result() }}
+        </div>
+      </div>
+    }
+  </div>
+
+  @if(history().length > 0) {
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-200">Analysis History</h3>
+        <button (click)="clearHistory()" class="px-3 py-1 text-xs font-medium text-gray-300 bg-red-800/50 rounded-md hover:bg-red-700 transition-colors">
+            Clear History
+        </button>
+      </div>
+      <div class="bg-gray-800/50 rounded-xl shadow-lg p-4 space-y-2 max-h-96 overflow-y-auto">
+        @for(item of history(); track item.id) {
+            <button (click)="loadFromHistory(item)" class="w-full text-left p-3 rounded-lg hover:bg-gray-700/50 transition-colors">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-200 truncate">{{ item.prompt }}</p>
+                        <p class="text-xs text-gray-400">
+                            {{ item.mode === 'image' ? 'Image' : 'Video' }} Analysis: {{ item.fileName }}
+                        </p>
+                    </div>
+                    <span class="text-xs text-gray-500 ml-4 flex-shrink-0">{{ item.timestamp | date:'short' }}</span>
+                </div>
+            </button>
+        }
+      </div>
+    </div>
+  }
+</div>

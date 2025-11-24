@@ -1,0 +1,80 @@
+<div class="h-[calc(100vh-10rem)] flex flex-col bg-gray-800/50 rounded-xl shadow-lg">
+  <div class="p-4 border-b border-gray-700">
+    <div class="max-w-sm mx-auto bg-gray-800 rounded-lg p-1 flex space-x-1">
+      <button (click)="setMode('thinking')" class="w-full py-2 text-sm font-semibold rounded-md transition-colors" [class.bg-gemini-yellow]="mode() === 'thinking'" [class.text-black]="mode() === 'thinking'" [class.hover:bg-gray-700]="mode() !== 'thinking'">
+        Thinking Mode
+      </button>
+      <button (click)="setMode('search')" class="w-full py-2 text-sm font-semibold rounded-md transition-colors" [class.bg-gemini-yellow]="mode() === 'search'" [class.text-black]="mode() === 'search'" [class.hover:bg-gray-700]="mode() !== 'search'">
+        Search Grounded
+      </button>
+    </div>
+    <div class="text-center mt-3">
+        @if(mode() === 'thinking') {
+            <p class="text-xs text-gray-400">For complex questions requiring deep reasoning. Powered by <span class="font-semibold text-gray-300">gemini-3-pro-preview</span>.</p>
+        } @else {
+            <p class="text-xs text-gray-400">For up-to-date information on recent events. Powered by <span class="font-semibold text-gray-300">gemini-2.5-flash</span> with Google Search.</p>
+        }
+    </div>
+  </div>
+
+  <div #chatContainer class="flex-1 p-6 space-y-6 overflow-y-auto">
+    @for(message of messages(); track message.id) {
+      <div class="flex" [class.justify-end]="message.role === 'user'">
+        @if (message.role === 'model') {
+            <div class="flex items-start gap-2.5 max-w-xl">
+                 <div class="flex flex-col gap-1 w-full">
+                    <div class="flex flex-col leading-1.5 p-4 border-gray-700 bg-gray-900 rounded-e-xl rounded-es-xl">
+                       <p class="text-sm font-normal text-gray-300 whitespace-pre-wrap">{{ message.parts[0].text }}<span class="inline-block w-2 h-4 bg-white animate-pulse" [style.display]="status() === 'loading' && $last ? 'inline-block' : 'none'"></span></p>
+                    </div>
+                    @if (message.groundingChunks && message.groundingChunks.length > 0) {
+                        <div class="mt-2 p-3 bg-gray-900/50 rounded-lg border border-gray-700">
+                            <h4 class="text-xs font-semibold text-gray-400 mb-2">Sources from Google Search:</h4>
+                            <div class="space-y-2">
+                                @for(chunk of message.groundingChunks; track $index) {
+                                    @if(chunk.web) {
+                                        <a [href]="chunk.web.uri" target="_blank" class="flex items-center space-x-2 text-xs text-blue-300 hover:underline">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                            </svg>
+                                            <span class="truncate">{{ chunk.web.title }}</span>
+                                        </a>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                 </div>
+            </div>
+        } @else {
+             <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gemini-blue rounded-s-xl rounded-ee-xl max-w-xl">
+                <p class="text-sm font-normal text-white whitespace-pre-wrap">{{ message.parts[0].text }}</p>
+             </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="p-4 border-t border-gray-700">
+    @if (error()) {
+      <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-2 rounded-lg mb-2 text-sm" role="alert">
+        <strong class="font-bold">Error: </strong>
+        <span>{{ error() }}</span>
+      </div>
+    }
+    <form [formGroup]="chatForm" (ngSubmit)="sendMessage()" class="flex items-center space-x-2">
+      <input formControlName="message" type="text" class="w-full bg-gray-700 border-gray-600 rounded-lg shadow-sm focus:ring-gemini-yellow focus:border-gemini-yellow text-white p-3" placeholder="Type your message...">
+      <button type="submit" [disabled]="status() === 'loading' || chatForm.invalid" class="p-3 rounded-full text-white bg-gemini-yellow hover:bg-opacity-90 disabled:bg-gray-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gemini-yellow transition-all">
+         @if (status() === 'loading') {
+            <svg class="animate-spin h-6 w-6 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+         } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+         }
+      </button>
+    </form>
+  </div>
+</div>

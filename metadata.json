@@ -1,0 +1,7 @@
+{
+  "name": "Gemini Creative Suite",
+  "description": "An all-in-one application to generate and analyze media, and chat with advanced AI models powered by the Google Gemini API. Features include image and video generation, media analysis, and chat with search grounding and advanced thinking capabilities.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
